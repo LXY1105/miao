@@ -1,27 +1,30 @@
 <template>
 <div class="city_body">
   <div class="city_list">
-        <div class="city_hot">
-            <h2>热门城市</h2>
-            <ul class="clearfix">
-                <li v-for="item in HotList" :key="item.id">{{ item.nm }}</li>
-            </ul>
+    <Scroller ref="city_list">
+        <div>
+          <div class="city_hot">
+              <h2>热门城市</h2>
+              <ul class="clearfix">
+                  <li v-for="item in HotList" :key="item.id" @tap="handleTocity(item.nm,item.id)">{{ item.nm }}</li>
+              </ul>
+          </div>
+          <div class="city_sort" ref="city_sort">
+              <div v-for="item in CityList" :key="item.index">
+                  <h2>{{ item.index }}</h2>
+                  <ul>
+                      <li v-for="itemList in item.list" :key="itemList.id" @tap="handleTocity(itemList.nm,itemList.id)">{{ itemList.nm }}</li>
+                  </ul>
+              </div>	
+          </div>
         </div>
-        <div class="city_sort" ref="city_sort">
-            <div v-for="item in CityList" :key="item.index">
-                <h2>{{ item.index }}</h2>
-                <ul>
-                    <li v-for="itemList in item.list" :key="itemList.id" >{{ itemList.nm }}</li>
-                </ul>
-            </div>	
-        </div>
-    </div>
-    <div class="city_index">
-        <ul>
-            <li v-for="(item,idx) in CityList" :key="item.idx" 
-            @touchstart="handleToIndex(idx)">{{ item.index }}</li>
-        </ul>
-    </div>
+    </Scroller>
+  </div>
+  <div class="city_index">
+      <ul>
+        <li v-for="(item,idx) in CityList" :key="item.idx" @touchstart="handleToIndex(idx)">{{ item.index }}</li>
+      </ul>
+  </div>
 </div>
 </template>
 
@@ -35,35 +38,47 @@ export default {
     }
   },
   mounted() {
-    this.axios('/api/cityList').then((res)=>{
-      var cities = res.data.data.cities;
-      // 数据改造格式 [{index:'B'},{nm:'北京',py: "beijing"}]
-      var{CityList,HotList} = this.ReseCitytlist(cities);
-      this.CityList = CityList;
-      this.HotList = HotList;
-    })
+        var CityList = window.localStorage.getItem(CityList) 
+        var HotList = window.localStorage.getItem(HotList)
+
+        if( CityList && HotList ){
+          this.CityList = JSON.parse(CityList);
+          this.HotList = JSON.parse(HotList);
+        }else{
+          this.axios('/api/cityList').then((res)=>{
+          var Cities = res.data.data.cities;
+          // 数据改造格式 [{index:'B'},{nm:'北京',py: "beijing"}]
+          var{CityList,HotList} = this.ReseCitytlist(Cities);
+          this.CityList = CityList;
+          this.HotList = HotList;
+
+          // 存储
+          window.localStorage.setItem('CityList',JSON.stringify(CityList));
+          window.localStorage.setItem('HotList',JSON.stringify(HotList));
+          })    
+        }
     },
     methods:{
-      ReseCitytlist(cities){
+      ReseCitytlist(Cities){
         var CityList = [];
         var HotList = [];
 
         // 热门城市
-        for(var i=0;i<cities.length;i++){
-          if(cities[i].isHot === 1){
-            HotList.push(cities[i])
+        for(var i=0;i<Cities.length;i++){
+          if(Cities[i].isHot === 1){
+            HotList.push(Cities[i])
           }
         }
 
-        for (var i = 0; i < cities.length; i++) {
-          var firstLetter = cities[i].py.substring(0,1).toUpperCase();
+        for (var i = 0; i < Cities.length; i++) {
+          var firstLetter = Cities[i].py.substring(0,1).toUpperCase();
             if(toCon(firstLetter)){//新添加
-              CityList.push( { index : firstLetter, list : [{ nm : cities[i].nm, id: cities[i].id }]})
+              CityList.push( { index : firstLetter, list : [{ nm : Cities[i].nm, id: Cities[i].id }]})
             }else{
               for(var j=0;j<CityList.length;j++){
                 if(CityList[j].index === firstLetter){
                   //r如果py字母之间相等，就累加城市
-                  CityList[j].list.push({ nm : cities[i].nm, id: cities[i].id })
+                  CityList[j].list.push({ nm : Cities[i].nm, id: Cities[i].id })
                 }
               }
             }
@@ -88,7 +103,6 @@ export default {
           }
           return true;//新添加条件
         }
-        console.log(CityList,HotList)
         return {
           CityList,
           HotList
@@ -96,16 +110,26 @@ export default {
       },
       handleToIndex(idx){
         var h2 = this.$refs.city_sort.getElementsByTagName('h2');
+        console.log(h2[idx].offsetTop)
         this.$refs.city_sort.parentNode.scrollTop = h2[idx].offsetTop;
         // h2标签本身也是一个数组,与idx有一一对应关系
+        // 利用better-scroll本身的方法处理索引城市
+        this.$refs.city_list.toScrollTop(-h2[idx].offsetTop)
+      },
+      handleTocity(nm,id){
+        console.log(nm,id)
+        // 触发修改
+        this.$store.commit('City/CITY_INFO',{nm,id})
+        window.localStorage.setItem('newnm',nm);
+        window.localStorage.setItem('newid',id);
+        this.$router.push('/movie/nowplaying')
       }
     }
   }
 </script>
 
 <style scoped>
-#content .city_body{ margin-top: 45px; display: flex; width:100%; position: fixed;
- top: 53px; bottom: 0;}
+#content .city_body{ margin-top: 45px; display: flex; width:100%; position: absolute; top: 0; bottom: 0;}
 .city_body .city_list{ flex:1; overflow: auto; background: #FFF5F0;}
 .city_body .city_list::-webkit-scrollbar{
     background-color:transparent;

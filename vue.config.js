@@ -1,6 +1,6 @@
 module.exports = {
     devServer: {
-        port: 8082,// 端口
+        port: 8092,// 端口
         proxy: {
             '/api': {// 小暗号
                 target: 'http://39.97.33.178', // 目标服务器

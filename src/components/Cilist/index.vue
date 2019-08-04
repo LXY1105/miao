@@ -1,21 +1,25 @@
 <template>
 <div class="cinema_body">
-    <ul>
-        <li v-for="item in cinemaList" :key="item.id">
-            <div>
-                <span>{{ item.nm }}</span>
-                <span class="q"><span class="price">{{ item.sellPrice }}</span> 元起</span>
-            </div>
-            <div class="address">
-                <span>{{ item.addr }}</span>
-                <span>{{ item.distance }}</span>
-            </div>
-            <div class="card">
-                <div v-for="(num,key) in item.tag"  v-if="num===1" :key="key" :class=" key | classCard ">{{ key | formatCard}}</div>
-            </div>
-        </li>
-    </ul>
-    </div>    
+    <Loading v-if="isLoading"/>
+    <Scroller v-else :handleToScroll="handleToScroll" :handleToTouchEnd="handleToTouchEnd">
+        <ul>
+            <li class="pullDown">{{pullDownMsg}}</li>
+            <li v-for="item in cinemaList" :key="item.id">
+                <div>
+                    <span>{{ item.nm }}</span>
+                    <span class="q"><span class="price">{{ item.sellPrice }}</span> 元起</span>
+                </div>
+                <div class="address">
+                    <span>{{ item.addr }}</span>
+                    <span>{{ item.distance }}</span>
+                </div>
+                <div class="card">
+                    <div v-for="(num,key) in item.tag"  v-if="num===1" :key="key" :class=" key | classCard ">{{ key | formatCard}}</div>
+                </div>
+            </li>
+        </ul>
+    </Scroller>
+</div>    
 </template>
 
 <script>
@@ -23,16 +27,19 @@ export default {
     name: 'Clist',
     data() {
         return {
-            cinemaList:[]
+            cinemaList:[],
+            pullDownMsg:'',
+            isLoading: true
         }
     },
-    mounted() {
-        this.axios.get('/api/cinemaList?cityId=10').then((res)=>{
+    activated () {
+        var cityId = this.$store.state.City.id;
+        this.axios.get('/api/cinemaList?cityId='+cityId).then((res)=>{
             var msg = res.data.msg;
             if(msg === 'ok'){
                 this.cinemaList = res.data.data.cinemas;
-                console.log(this.cinemaList)
-            }
+                this.isLoading = false
+            }   
         });
     },
     filters: {
@@ -64,6 +71,28 @@ export default {
             }
             return '';
         }
+    },
+    methods : {
+        handleToScroll (pos) {
+            if(pos.y>30){
+                this.pullDown = '正在下拉刷新中'
+            }
+            
+        },
+        handleToTouchEnd (pos) {
+            if(pos.y>30){
+                this.pullDownMsg = '更新成功';
+                this.axios.get('/api/cinemaList?cityId=10').then((res)=>{
+                    var msg = res.data.msg;
+                    if(msg === 'ok'){
+                        setTimeout(()=>{
+                            this.cinemaList = res.data.data.cinemas;
+                            this.pullDownMsg = '';
+                        },100);
+                    }
+                });
+            }
+        }
     }
 }
 </script>
@@ -81,4 +110,5 @@ export default {
 .cinema_body .card div{ padding: 0 3px; height: 15px; line-height: 15px; border-radius: 2px; color: #f90; border: 1px solid #f90; font-size: 13px; margin-right: 5px;}
 .cinema_body .card div.or{ color: #f90; border: 1px solid #f90;}
 .cinema_body .card div.bl{ color: #589daf; border: 1px solid #589daf;}
+.cinema_body .pullDown{ margin:0; padding:0; border:none;}
 </style>
