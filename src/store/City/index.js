@@ -1,6 +1,6 @@
 const state = {
-    nm: window.localStorage.getItem('nownm') ||'北京',
-    id: window.localStorage.getItem('nowid') || 1
+    nm: window.localStorage.getItem('newnm') ||'北京',
+    id: window.localStorage.getItem('newid') || 1
 };
 
 const actions = {

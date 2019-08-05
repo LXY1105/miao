@@ -21,6 +21,8 @@
     </keep-alive>
     </div>
     <TabBar/>
+    <!-- 命名视图 -->
+    <router-view name="detail" />
   </div>
 </template>
 
@@ -35,24 +37,26 @@ export default {
     TabBar,
   },
   mounted(){
-    setTimeout(() => {
-      this.axios.get('/api/getLocation').then((res)=>{
-        var nm = res.data.data.nm;
-        var id = res.data.data.id; 
-        if(this.$store.state.City.id == id){return;}
-        messageBox({
-            title : '定位',
-            content : '沈月',
-            cancel : '取消',
-            ok : '切换定位',
-            handleOk(){
-              window.localStorage.setItem('nowNm',nm);
-              window.localStorage.setItem('nowId',id);
-              window.location.reload();//页面刷新
-            },
-        });
-      })
-    }, 1000);
+            this.axios.get('/api/getLocation').then((res)=>{
+                var msg = res.data.msg;
+                if(msg === 'ok'){
+                  console.log(res)
+                    var nm = res.data.data.nm;
+                    var id = res.data.data.id;
+                    if( this.$store.state.City.id == id ){return;}
+                    messageBox({
+                        title : '定位',
+                        content : nm,
+                        cancel : '取消',
+                        ok : '切换定位',
+                        handleOk(){
+                            window.localStorage.setItem('newnm',nm);
+                            window.localStorage.setItem('newid',id);
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
   }
 }
 </script>

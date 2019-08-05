@@ -4,7 +4,7 @@
     <Scroller v-else :handleToScroll="handleToScroll" :handleToTouchEnd="handleToTouchEnd">
         <ul>
             <li class="pullDown">{{ pullDownMsg }}</li>
-            <li v-for="item in movieList" :key="item.id">
+            <li v-for="item in movieList" :key="item.id" @tap="handleTodetail(item.id)">
                 <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
                 <div class="info_list">
                     <h2>{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
@@ -22,7 +22,6 @@
 </template>
 
 <script>
-// import BScroll from 'better-scroll'
 export default {
   data() {
         return {
@@ -35,7 +34,6 @@ export default {
   activated() {
         var cityId= this.$store.state.City.id;
         if( this.prevCityId === cityId ){ return; }
-        console.log(111);
         this.axios.get('/api/movieOnInfoList?cityId='+cityId).then((res)=>{
         var msg = res.data.msg;
         if( msg === 'ok' ){
@@ -43,44 +41,15 @@ export default {
           this.prevCityId = cityId;
           console.log(this.prevCityId,cityId)
           this.isLoading = false;
-        //   this.$nextTick(()=>{
-        //     //   BScro   ll 参数1是最外层容器，参数2 配置对象
-        //     var scroll = new BScroll( this.$refs.movie_body , {
-        //         tap : true,
-        //         probeType: 1
-        //     });
-        //     //scroll滚动触发
-        //     scroll.on('scroll',(pos)=>{
-        //         //console.log('scroll');
-        //         if( pos.y > 30 ){
-        //             this.pullDownMsg = '正在更新中';
-        //         }
-
-        //     });
-        //     //touchEnd是滚动结束后触发
-        //     scroll.on('touchEnd',(pos)=>{
-        //         //console.log('touchend');
-        //         if( pos.y > 30 ){
-        //             this.axios.get('/api/movieOnInfoList?cityId=11').then((res)=>{
-        //                 var msg = res.data.msg;
-        //                 if( msg === 'ok' ){
-        //                     this.pullDownMsg = '更新成功';
-        //                     setTimeout(()=>{
-        //                         this.movieList = res.data.data.movieList;
-        //                         this.pullDownMsg = '';
-        //                     },1000);
-                            
-        //                 }
-        //             });
-                    
-        //         }
-        //     });
-
-        // }); 
         }
       })
   },
   methods : {
+      handleTodetail(movieid){
+          this.$router.push('/movie/detail/1/'+movieid)
+      },
+
+
       handleToScroll(pos){
           if(pos.y > 30){
               this.pullDownMsg = '正在下拉刷新中'

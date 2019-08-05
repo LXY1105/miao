@@ -4,7 +4,7 @@
   <Scroller v-else  :handleToScroll="handleToScroll" :handleToTouchEnd="handleToTouchEnd">
       <ul>
           <li class="pullDown">{{pullDownMsg}}</li>
-          <li v-for="item in comingList" :key="item.id">
+          <li v-for="item in comingList" :key="item.id" @tap="handleTodetail(item.id)">
           <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
           <div class="info_list">
               <h2 >{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
@@ -44,6 +44,9 @@ export default {
       })
   },
   methods : {
+    handleTodetail(commid){
+      this.$router.push('/movie/detail/2/'+commid)
+    },
     handleToScroll(pos){
       if(pos.y > 30){
           this.pullDownMsg = '正在下拉刷新中'
